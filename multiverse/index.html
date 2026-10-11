@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Multiverse</title>
+    <link rel="icon" href="data:," />
+  </head>
+  <body>
+    <div id="stage"></div>
+
+    <!-- Start gate: any click or key begins the experience -->
+    <div id="gate" class="layer">
+      <div class="gate-inner">
+        <div class="gate-logo">THE MULTIVERSE</div>
+        <div id="gate-prompt" class="gate-prompt">Click anywhere or press any key to begin</div>
+        <div class="gate-sub">Best experienced with sound on</div>
+      </div>
+    </div>
+
+    <!-- Cinematic intro -->
+    <div id="intro" class="layer hidden">
+      <div id="subtitle" class="subtitle"></div>
+      <div id="intro-title" class="intro-title hidden">
+        <div class="intro-title-main">THE MULTIVERSE</div>
+        <div class="intro-title-sub">Simalisis awakens</div>
+      </div>
+      <div class="skip-hint">Press Enter, Space or click to skip</div>
+    </div>
+
+    <!-- Holographic main menu -->
+    <div id="menu" class="layer hidden">
+      <div class="holo-frame">
+        <div class="menu-kicker">LODAMIS // NEURAL GATEWAY ONLINE</div>
+        <h1 class="holo-title" data-text="THE MULTIVERSE">THE MULTIVERSE</h1>
+        <div class="menu-tag">Escape the dying Earth. Become the god who started everything.</div>
+        <nav class="menu-nav">
+          <button class="menu-btn" data-action="play">PLAY</button>
+          <button class="menu-btn" data-action="settings">SETTINGS</button>
+          <button class="menu-btn" data-action="quit">QUIT</button>
+        </nav>
+        <div class="menu-foot">MOUSE / ARROWS + ENTER &nbsp;·&nbsp; 3D SCENE BY LODAMIS</div>
+      </div>
+      <div id="name-panel" class="panel hidden">
+        <div class="panel-title">NAME YOUR CHARACTER</div>
+        <input id="name-input" maxlength="18" value="Simalisis" autocomplete="off" spellcheck="false" />
+        <div class="panel-row">
+          <button class="menu-btn small" data-action="name-back">BACK</button>
+          <button class="menu-btn small primary" data-action="name-begin">ENTER THE MULTIVERSE</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings (used from the menu and the pause screen) -->
+    <div id="settings" class="layer panel-wrap hidden">
+      <div class="panel wide">
+        <div class="panel-title">SETTINGS</div>
+        <label class="row">Master volume <input type="range" min="0" max="1" step="0.01" data-setting="master" /></label>
+        <label class="row">Music &amp; ambience <input type="range" min="0" max="1" step="0.01" data-setting="music" /></label>
+        <label class="row">Narration <input type="range" min="0" max="1" step="0.01" data-setting="voice" /></label>
+        <label class="row">Mouse sensitivity <input type="range" min="0.5" max="2.5" step="0.05" data-setting="sensitivity" /></label>
+        <label class="row">Graphics <select data-setting="quality"><option value="high">High (reflections, shadows, bloom)</option><option value="low">Low (faster)</option></select></label>
+        <label class="row">Subtitles <input type="checkbox" data-setting="subtitles" /></label>
+        <div class="panel-row"><button class="menu-btn small primary" data-action="settings-back">BACK</button></div>
+      </div>
+    </div>
+
+    <!-- Pause -->
+    <div id="pause" class="layer panel-wrap hidden">
+      <div class="panel">
+        <div class="panel-title">PAUSED</div>
+        <button class="menu-btn" data-action="resume">RESUME</button>
+        <button class="menu-btn" data-action="pause-settings">SETTINGS</button>
+        <button class="menu-btn" data-action="to-menu">MAIN MENU</button>
+      </div>
+    </div>
+
+    <!-- In-game HUD -->
+    <div id="hud" class="layer hidden">
+      <div class="hud-top">
+        <div class="hud-name" id="hud-name">SIMALISIS</div>
+        <div class="hud-loc" id="hud-loc">Valley of the First Light</div>
+        <div class="hud-meta"><span id="hud-time">18:36</span> · <span id="hud-weather">Clear</span> · <span id="hud-mode">Walking</span></div>
+      </div>
+      <div class="hud-hint" id="hud-hint">WASD move · Shift run · Mouse look · Space jump / swim up · C dive · R rain · Esc menu</div>
+      <div class="hud-crosshair"></div>
+      <div class="hud-vignette" id="hud-vignette"></div>
+      <div class="underwater-tint" id="underwater-tint"></div>
+    </div>
+
+    <div id="loading" class="layer hidden">
+      <div class="loading-text">Lodamis is weaving the valley<span class="dots"></span></div>
+    </div>
+    <div id="fade" class="fade"></div>
+
+    <div id="goodbye" class="layer hidden">
+      <div class="gate-inner">
+        <div class="gate-logo">LODAMIS DISCONNECTED</div>
+        <div class="gate-sub">The multiverse is still waiting. You may close this tab.</div>
+        <button class="menu-btn" data-action="reopen">RETURN TO THE MENU</button>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
