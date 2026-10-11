@@ -10,6 +10,7 @@ import { Weather } from './weather.js';
 import { buildFoliage, windU } from './foliage.js';
 import { buildFeatures } from './features.js';
 import { buildCreatures } from './creatures.js';
+import { buildExtras } from './extras.js';
 
 const DAY_LENGTH_SECONDS = 60; // one in-game hour lasts one real minute (24 minutes per day)
 const FOG_CLEAR = 0.00075;
@@ -98,6 +99,7 @@ export class World {
     this.scene.add(this.features.group);
     this.creatures = buildCreatures(quality);
     this.scene.add(this.creatures.group);
+    this.extras = buildExtras(this.scene, quality);
 
     // Reflections.
     this.reflector = new Reflector(renderer, this.hi ? 0.6 : 0.4);
@@ -183,6 +185,7 @@ export class World {
 
     this.creatures.update(dt, this.time, player);
     this.features.update(dt, this.time, this.camera);
+    this.extras.update(dt, this.time, this.hour);
   }
 
   render() {

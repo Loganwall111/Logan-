@@ -36,6 +36,7 @@
         <div class="menu-tag">Escape the dying Earth. Become the god who started everything.</div>
         <nav class="menu-nav">
           <button class="menu-btn" data-action="play">PLAY</button>
+          <button class="menu-btn" data-action="realms">REALMS</button>
           <button class="menu-btn" data-action="settings">SETTINGS</button>
           <button class="menu-btn" data-action="quit">QUIT</button>
         </nav>
@@ -48,6 +49,15 @@
           <button class="menu-btn small" data-action="name-back">BACK</button>
           <button class="menu-btn small primary" data-action="name-begin">ENTER THE MULTIVERSE</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Realm chooser: from the menu, or by walking to the Lodamis gate and pressing E -->
+    <div id="realms" class="layer panel-wrap hidden">
+      <div class="panel wide">
+        <div class="panel-title">REALMS</div>
+        <div id="realm-list" class="realm-list"></div>
+        <div class="panel-row"><button class="menu-btn small primary" data-action="realms-back">BACK</button></div>
       </div>
     </div>
 
@@ -70,6 +80,7 @@
       <div class="panel">
         <div class="panel-title">PAUSED</div>
         <button class="menu-btn" data-action="resume">RESUME</button>
+        <button class="menu-btn" data-action="to-valley">RETURN TO THE VALLEY</button>
         <button class="menu-btn" data-action="pause-settings">SETTINGS</button>
         <button class="menu-btn" data-action="to-menu">MAIN MENU</button>
       </div>
@@ -84,6 +95,8 @@
       </div>
       <div class="hud-hint" id="hud-hint">WASD move · Shift run · Mouse look · Space jump / swim up · C dive · R rain · Esc menu</div>
       <div class="hud-crosshair"></div>
+      <div id="gate-hint" class="gate-hint hidden">Press E to step into the Lodamis gate</div>
+      <div id="ghost-tint" class="ghost-tint"></div>
       <div class="hud-vignette" id="hud-vignette"></div>
       <div class="underwater-tint" id="underwater-tint"></div>
     </div>

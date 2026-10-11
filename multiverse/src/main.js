@@ -5,6 +5,7 @@ import { Player } from './player.js';
 import { Intro } from './intro.js';
 import { MenuScene } from './menu.js';
 import { AudioManager } from './audio.js';
+import { buildRealm, REALM_LIST } from './realms.js';
 import { SPAWN, LODAMIS, heightAt, WATER_Y, CLIFF_X, PLATEAU_Y } from './terrain.js';
 
 // ---------- Narration (generated voice clips live in public/audio) ----------
@@ -51,6 +52,7 @@ const $$ = (s) => [...document.querySelectorAll(s)];
 const layers = {
   gate: $('#gate'), intro: $('#intro'), menu: $('#menu'), settings: $('#settings'), pause: $('#pause'),
   hud: $('#hud'), loading: $('#loading'), goodbye: $('#goodbye'), namePanel: $('#name-panel'), introTitle: $('#intro-title'),
+  realms: $('#realms'),
 };
 const fade = $('#fade');
 const subtitleEl = $('#subtitle');
@@ -73,6 +75,8 @@ function resize() {
   renderer.domElement.style.width = `${w}px`;
   renderer.domElement.style.height = `${h}px`;
   menu.resize(w, h);
+  realmCam.aspect = w / Math.max(1, h);
+  realmCam.updateProjectionMatrix();
   intro?.resize();
   if (world) world.resize(w, h, pixelRatio());
 }
@@ -85,7 +89,13 @@ let intro = null;
 let world = null;
 let player = null;
 let worldQuality = null;
-const state = { mode: 'gate', paused: false, underwater: false, lastHud: 0, introStartedAt: 0, pauseReturn: 'game', name: 'Simalisis' };
+const state = { mode: 'gate', paused: false, underwater: false, lastHud: 0, introStartedAt: 0, pauseReturn: 'game', name: 'Simalisis', realm: null, realmTime: 0, realmsFromGame: false };
+const realmCam = new THREE.PerspectiveCamera(72, 1, 0.1, 2000);
+const realmCache = {};
+function getRealm(id) {
+  if (!realmCache[id]) realmCache[id] = buildRealm(id);
+  return realmCache[id];
+}
 
 function show(...names) {
   for (const k of Object.keys(layers)) layers[k].classList.toggle('hidden', !names.includes(k));
@@ -181,6 +191,19 @@ document.addEventListener('click', (e) => {
       state.name = ($('#name-input').value || 'Simalisis').trim().slice(0, 18) || 'Simalisis';
       enterGame(state.name);
       break;
+    case 'realms':
+      layers.realms.classList.remove('hidden');
+      break;
+    case 'realms-back':
+      closeRealms();
+      break;
+    case 'realm':
+      chooseRealm(btn.dataset.id);
+      break;
+    case 'to-valley':
+      exitRealm();
+      resumeGame();
+      break;
     case 'settings':
       state.settingsReturn = 'menu';
       layers.settings.classList.remove('hidden');
@@ -256,7 +279,7 @@ function toast(msg) {
 }
 
 // ---------- Entering the world ----------
-function enterGame(name) {
+function enterGame(name, realmId = null) {
   state.name = name;
   show('loading');
   // Let the loading panel paint before the heavy world build.
@@ -275,12 +298,84 @@ function enterGame(name) {
     state.lastHud = 0;
     $('#hud-name').textContent = name.toUpperCase();
     show('hud');
+    if (realmId) enterRealm(realmId);
+    else state.realm = null;
     renderer.domElement.focus?.();
     requestLock();
     setTimeout(() => { $('#hud-hint').style.display = 'none'; }, 15000);
     $('#hud-hint').style.display = '';
   }, 60);
 }
+
+// ---------- Realms ----------
+function enterRealm(id) {
+  const r = getRealm(id);
+  state.realm = r;
+  state.realmTime = 0;
+  state.paused = false;
+  r.scene.fog = r.fog;
+  r.scene.background = r.background;
+  player.setRealm(r);
+  player.pos.set(r.spawn.x, r.spawn.y, r.spawn.z);
+  player.vel.set(0, 0, 0);
+  player.yaw = 0;
+  player.pitch = -0.05;
+  player.keys.clear();
+  toast(`Entered ${r.name}. Press H to ascend as a ghost, or Esc to pause.`);
+}
+
+function exitRealm() {
+  if (!state.realm) return;
+  state.realm = null;
+  player.setRealm(null);
+  player.pos.set(SPAWN.x, heightAt(SPAWN.x, SPAWN.z), SPAWN.z);
+  player.vel.set(0, 0, 0);
+  player.yaw = Math.atan2(-(LODAMIS.x - SPAWN.x), -(LODAMIS.z - SPAWN.z));
+  player.pitch = -0.12;
+  toast('Back in the valley.');
+}
+
+function closeRealms() {
+  layers.realms.classList.add('hidden');
+  if (state.mode === 'game' && state.realmsFromGame) {
+    state.realmsFromGame = false;
+    state.paused = false;
+    requestLock();
+  }
+}
+
+function chooseRealm(id) {
+  if (state.mode === 'menu') {
+    layers.realms.classList.add('hidden');
+    enterGame(state.name || 'Simalisis', id);
+    return;
+  }
+  // Chosen in-game at the Lodamis gate.
+  layers.realms.classList.add('hidden');
+  state.realmsFromGame = false;
+  enterRealm(id);
+  requestLock();
+}
+
+function openRealmsFromGame() {
+  state.realmsFromGame = true;
+  state.paused = true;
+  player?.keys.clear();
+  document.exitPointerLock?.();
+  layers.realms.classList.remove('hidden');
+}
+
+(function buildRealmList() {
+  const list = $('#realm-list');
+  for (const r of REALM_LIST) {
+    const b = document.createElement('button');
+    b.className = 'menu-btn realm-btn';
+    b.dataset.action = 'realm';
+    b.dataset.id = r.id;
+    b.innerHTML = `${r.label.toUpperCase()}<small>${r.blurb}</small>`;
+    list.appendChild(b);
+  }
+})();
 
 function requestLock() {
   try {
@@ -306,8 +401,9 @@ function resumeGame() {
 document.addEventListener('pointerlockchange', () => {
   if (state.mode !== 'game') return;
   if (document.pointerLockElement === renderer.domElement) {
+    if (state.paused && state.realmsFromGame) return;
     if (state.paused) resumeGame();
-  } else if (!state.paused) {
+  } else if (!state.paused && !state.realmsFromGame) {
     pauseGame();
   }
 });
@@ -335,11 +431,27 @@ const GAME_KEYS = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'Space', 'ShiftLeft',
 window.addEventListener('keydown', (e) => {
   if (state.mode !== 'game') return;
   if (e.code === 'Escape') {
-    if (state.paused) resumeGame();
+    if (state.realmsFromGame) closeRealms();
+    else if (state.paused) resumeGame();
     else pauseGame();
     return;
   }
   if (state.paused) return;
+  if (e.code === 'KeyE' && !e.repeat && !state.realm && nearLodamis()) {
+    openRealmsFromGame();
+    return;
+  }
+  if (e.code === 'KeyG' && !e.repeat) {
+    const on = player.toggleGhost();
+    toast(on ? 'You are a ghost. Fly with Space and C. Press H to ascend.' : 'You are solid again.');
+    return;
+  }
+  if (e.code === 'KeyH' && !e.repeat) {
+    if (state.realm?.id === 'heaven') exitRealm();
+    else if (!player.ghost) toast('Only ghosts can ascend. Press G to become a ghost first.');
+    else enterRealm('heaven');
+    return;
+  }
   if (GAME_KEYS.has(e.code)) {
     player.keys.add(e.code);
     e.preventDefault();
@@ -355,7 +467,12 @@ window.addEventListener('keyup', (e) => {
 window.addEventListener('blur', () => player?.keys.clear());
 
 // ---------- HUD ----------
+function nearLodamis() {
+  return Math.hypot(player.pos.x - LODAMIS.x, player.pos.z - LODAMIS.z) < 9;
+}
+
 function locationName(p) {
+  if (state.realm) return state.realm.name;
   if (p.pos.y < WATER_Y - 0.4) return 'Drowned Glass Depths';
   if (Math.abs(p.pos.x - LODAMIS.x) < 60 && Math.abs(p.pos.z - LODAMIS.z) < 60) return 'The Lodamis Gate';
   if (Math.abs(p.pos.x - CLIFF_X) < 60) return 'Cliffs of the Great Fall';
@@ -370,10 +487,12 @@ function updateHud(now) {
   const hh = Math.floor(h);
   const mm = Math.floor((h - hh) * 60);
   $('#hud-time').textContent = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
-  $('#hud-weather').textContent = world.weather.label;
+  $('#hud-weather').textContent = state.realm ? 'Unknown' : world.weather.label;
+  document.body.classList.toggle('ghost', !!player.ghost);
+  $('#gate-hint').classList.toggle('hidden', !!state.realm || state.paused || !nearLodamis());
   $('#hud-mode').textContent = player.swimming ? (player.pos.y < WATER_Y - 2 ? 'Diving' : 'Swimming') : 'Walking';
   $('#hud-loc').textContent = locationName(player);
-  const under = world.underwater;
+  const under = state.realm ? false : world.underwater;
   $('#underwater-tint').classList.toggle('on', under);
   if (under !== state.underwater) {
     state.underwater = under;
@@ -394,6 +513,15 @@ function frame(now) {
     } else if (state.mode === 'title' || state.mode === 'menu') {
       menu.update(dt);
       renderer.render(menu.scene, menu.camera);
+    } else if (state.mode === 'game' && state.realm && player) {
+      if (!state.paused) {
+        player.update(dt);
+        state.realmTime += dt;
+        state.realm.update(dt, state.realmTime, realmCam, player);
+      }
+      player.applyCamera(realmCam);
+      renderer.render(state.realm.scene, realmCam);
+      updateHud(now);
     } else if (state.mode === 'game' && world && player) {
       if (!state.paused) {
         player.update(dt);

@@ -33,3 +33,29 @@ rain, rainbows, god rays, aurora, moon, planets, animals, floating islands and a
 
 Backrooms-style endless rooms, fractal and black-hole realms, TV and movie characters,
 ghost/heaven mode, giant ants and water drops, and the "lore realms" the design describes.
+
+## Realms (round two)
+
+Walk to the **Lodamis gate** and press **E**, or choose **REALMS** from the main menu:
+
+- **Infinity Backrooms**: endless hashed yellow-wallpaper maze, chunked rebuild, flickering lights.
+- **Infinity Fractal Maze**: raymarched Menger sponge inside a box.
+- **Black Hole**: accretion disk shader, photon ring, halo, and a sinking grid well.
+- **The Floating White Void**: white fog with 400 drifting shapes.
+- **Heaven**: golden clouds, light beams, and a gate.
+
+Pause (Esc) and choose **RETURN TO THE VALLEY** to leave a realm.
+
+## Ghosts
+
+- **G** toggles ghost mode. Ghosts fly and pass through walls, and their view is tinted.
+- **H** ascends a ghost to Heaven. Press H again in Heaven to return to the valley.
+
+## Valley extras
+
+- **Midnight TV**: west of Lodamis, figures step out of a static screen between 23:30 and 00:30.
+- **Giant ants**: 2–3 patrol the valley floor.
+- **Giant water drops**: two glassy drops in the landscape.
+- **Floating city**: visible on the horizon at (-200, 230, 300).
+
+Status: built and bundled. Realm shaders and the TV shader have NOT been compiled in a real browser in this environment. Check them in-browser.
